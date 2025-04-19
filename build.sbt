@@ -2,6 +2,12 @@ lazy val V = _root_.scalafix.sbt.BuildInfo
 
 lazy val scala3Version = "3.6.3"
 
+
+val kyoDeps = Seq(
+  libraryDependencies += "io.getkyo" %% "kyo-core" % "0.18.0",
+  libraryDependencies += "io.getkyo" %% "kyo-direct" % "0.18.0"
+)
+
 inThisBuild(
   List(
     semanticdbEnabled := true,
@@ -26,15 +32,16 @@ lazy val rules = (project in file("rules"))
 lazy val input = (project in file("input"))
   .settings(
     publish / skip := true,
-    scalaVersion := scala3Version
+    scalaVersion := scala3Version,
   )
+  .settings(kyoDeps *)
 
 lazy val output = (project in file("output"))
   .settings(
     publish / skip := true,
-    scalaVersion := scala3Version
+    scalaVersion := scala3Version,
   )
-
+  .settings(kyoDeps *)
 
 
 lazy val tests = (project in file("tests"))
