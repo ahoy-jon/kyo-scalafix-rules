@@ -34,7 +34,7 @@ class Kyo extends SemanticRule("Kyo") {
       }
 
     def patchDefer(t: Term): Patch =
-      Patch.addLeft(t, "{") + Patch.addRight(t, "}.unit")
+      Patch.addLeft(t, "(") + Patch.addRight(t, ").unit")
 
     def isUnit(t: Type): Boolean = {
       //check subtype ?

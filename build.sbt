@@ -16,7 +16,8 @@ val kyoSettings = Seq(
 inThisBuild(
   List(
     semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision
+    semanticdbVersion := scalafixSemanticdb.revision,
+    organization := "com.github.ahoy-jon"
   )
 )
 
@@ -28,8 +29,8 @@ lazy val `kyoRules` = (project in file("."))
 
 lazy val rules = (project in file("rules"))
   .settings(
+    name := "kyo-scalafix-rules",
     scalaVersion := V.scala213,
-    moduleName := "scalafix",
     libraryDependencies += "ch.epfl.scala" %% "scalafix-core" % V.scalafixVersion
   )
 
