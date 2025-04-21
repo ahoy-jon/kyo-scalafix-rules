@@ -2,9 +2,15 @@ lazy val V = _root_.scalafix.sbt.BuildInfo
 
 lazy val scala3Version = "3.6.3"
 
-val kyoDeps = Seq(
+val kyoSettings = Seq(
   libraryDependencies += "io.getkyo" %% "kyo-core" % "0.18.0",
-  libraryDependencies += "io.getkyo" %% "kyo-direct" % "0.18.0"
+  libraryDependencies += "io.getkyo" %% "kyo-direct" % "0.18.0",
+  scalacOptions ++= Seq(
+    "-Wvalue-discard",
+    "-Wnonunit-statement",
+    "-Wconf:msg=(unused.*value|discarded.*value|pure.*statement):error",
+    "-language:strictEquality"
+  )
 )
 
 inThisBuild(
@@ -14,7 +20,7 @@ inThisBuild(
   )
 )
 
-lazy val `kyo` = (project in file("."))
+lazy val `kyoRules` = (project in file("."))
   .aggregate(rules, input, output, tests)
   .settings(
     publish / skip := true
@@ -33,14 +39,14 @@ lazy val input = (project in file("input"))
     publish / skip := true,
     scalaVersion := scala3Version,
   )
-  .settings(kyoDeps *)
+  .settings(kyoSettings *)
 
 lazy val output = (project in file("output"))
   .settings(
     publish / skip := true,
     scalaVersion := scala3Version,
   )
-  .settings(kyoDeps *)
+  .settings(kyoSettings *)
 
 
 lazy val tests = (project in file("tests"))

@@ -13,7 +13,7 @@ object Kyo {
   val y: Unit < IO = defer {
     Console.printLine("ok").now
   }
-  
+
   val z: Unit < Any = {
     defer {
       Console.printLine("nok1").now
@@ -26,11 +26,11 @@ object Kyo {
   val xx: Unit < Any = defer {
     Console.printLine("warn").now
   }
-  
+
   def oups(i:Int): Unit < Any = defer {
     Console.printLine("a" * i).now
   }
-  
+
   def oupsOups(i:Int): Unit < Any = {
     defer {
       Console.printLine("nok1").now

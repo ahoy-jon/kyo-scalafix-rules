@@ -3,38 +3,38 @@ package fix
 import kyo.*
 
 object Kyo {
-  val x: Any < Any = defer {
+  val x: Unit < Any = {defer {
     Console.printLine("warn").now
-  }
+  }}.unit
 
-  val y: Any < IO = defer {
+  val y: Unit < IO = {defer {
     Console.printLine("ok").now
-  }
-  
-  val z: Any < Any = {
-    defer {
+  }}.unit
+
+  val z: Unit < Any = {
+    {defer {
       Console.printLine("nok1").now
-    }
-    defer {
+    }}.unit
+    {defer {
       Console.printLine("nok2").now
-    }
+    }}.unit
   }
 
-  val xx: Any < Any = defer {
+  val xx: Unit < Any = {defer {
     Console.printLine("warn").now
-  }
-  
-  def oups(i:Int): Any < Any = defer {
+  }}.unit
+
+  def oups(i:Int): Unit < Any = {defer {
     Console.printLine("a" * i).now
-  }
-  
-  def oupsOups(i:Int): Any < Any = {
-    defer {
+  }}.unit
+
+  def oupsOups(i:Int): Unit < Any = {
+    {defer {
       Console.printLine("nok1").now
-    }
-    defer {
+    }}.unit
+    {defer {
       Console.printLine("nok2").now
-    }
+    }}.unit
   }
 
 

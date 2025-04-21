@@ -19,32 +19,38 @@ class Kyo extends SemanticRule("Kyo") {
       case s: Defn.Val =>
         val synthetics: List[SemanticTree] = s.rhs.synthetics
         val structure = synthetics.structure
-        //println(s.symbol)
-        //println(structure)
-        //println("-" * 20)
+      //println(s.symbol)
+      //println(structure)
+      //println("-" * 20)
 
     })
 
-    @tailrec
-    def endsWithDefer(term: Stat): Boolean =
+    def defers(term: Stat): Seq[Term] =
       term match {
-        case Term.Apply.After_4_6_0(Term.Name("defer"), _) => true
+        case d@Term.Apply.After_4_6_0(Term.Name("defer"), _) => Seq(d)
         case Term.Block(stats) =>
-          stats.lastOption match {
-            case Some(value) => endsWithDefer(value)
-            case None => false
-          }
-        case _ => false
+          stats.flatMap(defers)
+        case _ => Nil
       }
 
+    def patchDefer(t: Term): Patch =
+      Patch.addLeft(t, "{") + Patch.addRight(t, "}.unit")
+
+    def isUnit(t: Type): Boolean = {
+      //check subtype ?
+      t match {
+        case Type.Name("Unit") => true
+        case Type.ApplyInfix(Type.Name("Unit"), Type.Name("<"), _) => true
+        case _ => false
+      }
+    }
 
     doc.tree.collect({
-      case Defn.Val(_, _, Some(Type.ApplyInfix(unit@Type.Name("Unit"), Type.Name("<"), context)), rhs)
-        if endsWithDefer(rhs) =>
-        Patch.replaceTree(unit, "Any")
-      case Defn.Def.After_4_7_3(_, _, _, Some(Type.ApplyInfix(unit@Type.Name("Unit"), Type.Name("<"), context)), rhs)
-        if endsWithDefer(rhs) =>
-        Patch.replaceTree(unit, "Any")
+      case Defn.Val(_, _, Some(t), rhs) if isUnit(t) =>
+        defers(rhs).map(patchDefer).asPatch
+      case Defn.Def.After_4_7_3(_, _, _, Some(t), rhs) if isUnit(t) =>
+        defers(rhs).map(patchDefer).asPatch
+
     }).asPatch
   }
 
