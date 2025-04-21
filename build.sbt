@@ -2,7 +2,6 @@ lazy val V = _root_.scalafix.sbt.BuildInfo
 
 lazy val scala3Version = "3.6.3"
 
-
 val kyoDeps = Seq(
   libraryDependencies += "io.getkyo" %% "kyo-core" % "0.18.0",
   libraryDependencies += "io.getkyo" %% "kyo-direct" % "0.18.0"
