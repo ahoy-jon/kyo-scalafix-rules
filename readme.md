@@ -1,7 +1,30 @@
 # Scalafix rules for kyo
 
-To develop rule:
+# Tests
 ```
 sbt ~tests/test
-# edit rules/src/main/scala/fix/Kyo.scala
 ```
+
+# Use
+```
+sbt rules/publishLocal
+```
+
+## using Scala-CLI
+add
+```
+//> using scalafixDependency com.github.ahoy-jon::kyo-scalafix-rules:0.1.0-SNAPSHOT
+```
+add
+```
+rules = [
+  Kyo
+]
+```
+run
+```
+scala-cli fix . --power
+```
+
+
+
