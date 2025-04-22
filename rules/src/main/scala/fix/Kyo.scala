@@ -2,7 +2,6 @@ package fix
 
 import scalafix.v1._
 
-import scala.annotation.tailrec
 import scala.meta._
 
 
@@ -14,17 +13,6 @@ class Kyo extends SemanticRule("Kyo") {
     //println("Tree.structureLabeled: " + doc.tree.structureLabeled)
 
 
-    //println("-" * 20)
-    doc.tree.traverse({
-      case s: Defn.Val =>
-        val synthetics: List[SemanticTree] = s.rhs.synthetics
-        val structure = synthetics.structure
-      //println(s.symbol)
-      //println(structure)
-      //println("-" * 20)
-
-    })
-
     def defers(term: Stat): Seq[Term] =
       term match {
         case d@Term.Apply.After_4_6_0(Term.Name("defer"), _) => Seq(d)
@@ -33,24 +21,48 @@ class Kyo extends SemanticRule("Kyo") {
         case _ => Nil
       }
 
-    def patchDefer(t: Term): Patch =
+    def patchDefer(t: Term): Patch = {
       Patch.addLeft(t, "(") + Patch.addRight(t, ").unit")
+    }
 
-    def isUnit(t: Type): Boolean = {
-      //check subtype ?
-      t match {
-        case Type.Name("Unit") => true
-        case Type.ApplyInfix(Type.Name("Unit"), Type.Name("<"), _) => true
+    //TODO : detect lifted defers
+
+    val PendingType: Symbol = Symbol("kyo/kernel/Pending$package.`<`#")
+    val UnitType: Symbol = Symbol("scala/Unit#")
+
+    def isSemanticUnit(semanticType: SemanticType): Boolean = {
+      semanticType match {
+        case TypeRef(NoType, PendingType, List(a, _)) =>
+          isSemanticUnit(a)
+        case TypeRef(NoType, UnitType, Nil) => true
         case _ => false
       }
     }
 
-    doc.tree.collect({
-      case Defn.Val(_, _, Some(t), rhs) if isUnit(t) =>
-        defers(rhs).map(patchDefer).asPatch
-      case Defn.Def.After_4_7_3(_, _, _, Some(t), rhs) if isUnit(t) =>
-        defers(rhs).map(patchDefer).asPatch
+    def isUnitType(t: Type): Boolean = {
+      //check subtype ?
+      val fromSyntax: Boolean = t match {
+        case Type.Name("Unit") => true
+        case Type.ApplyInfix(Type.Name("Unit"), Type.Name("<"), _) => true
+        case _ => false
+      }
+      //println("" + t + ":"+ t.structure + ":" +   t.symbol.info)
+      t.symbol.info match {
+        case _ if fromSyntax => true
+        case Some(value) =>
+          value.signature match {
+            case TypeSignature(Nil, _, up) => isSemanticUnit(up)
+            case _ => false
+          }
+        case None => false
+      }
+    }
 
+    doc.tree.collect({
+      case Defn.Val(_, _, Some(t), rhs) if isUnitType(t) =>
+        defers(rhs).map(patchDefer).asPatch
+      case Defn.Def.After_4_7_3(_, _, _, Some(t), rhs) if isUnitType(t) =>
+        defers(rhs).map(patchDefer).asPatch
     }).asPatch
   }
 

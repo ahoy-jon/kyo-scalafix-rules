@@ -37,5 +37,11 @@ object Kyo {
     }).unit
   }
 
+  type A = Unit < Any
+
+  val a:A = (defer (
+    Console.printLine("warn").now
+  )).unit
+
 
 }
