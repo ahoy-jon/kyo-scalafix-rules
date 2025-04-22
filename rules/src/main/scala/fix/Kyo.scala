@@ -2,6 +2,7 @@ package fix
 
 import scalafix.v1._
 
+import scala.annotation.tailrec
 import scala.meta._
 
 
@@ -11,7 +12,6 @@ class Kyo extends SemanticRule("Kyo") {
     //println("Tree.syntax: " + doc.tree.syntax)
     //println("Tree.structure: " + doc.tree.structure)
     //println("Tree.structureLabeled: " + doc.tree.structureLabeled)
-
 
     def defers(term: Stat): Seq[Term] =
       term match {
@@ -42,6 +42,7 @@ class Kyo extends SemanticRule("Kyo") {
       }
     }
 
+    @tailrec
     def isSemanticUnit(semanticType: SemanticType): Boolean = {
       semanticType match {
         //Unit
@@ -49,21 +50,21 @@ class Kyo extends SemanticRule("Kyo") {
         //a < _
         case TypeRef(NoType, PendingType, List(a, _)) => isSemanticUnit(a)
         //alias
-        case TypeRef(NoType, symbol, Nil) => upperBound(symbol).exists(isSemanticUnit)
+        case TypeRef(NoType, symbol, Nil) => upperBound(symbol) match {
+          case Some(semanticType) => isSemanticUnit(semanticType)
+          case None => false
+        }
         case _ => false
       }
     }
 
+    @tailrec
     def isUnitType(t: Type): Boolean = {
-      def fromSyntax: Boolean = t match {
+      t match {
         case Type.Name("Unit") => true
         case Type.ApplyInfix(t, Type.Name("<"), _) => isUnitType(t)
-        case _ => false
+        case _ => upperBound(t.symbol).exists(isSemanticUnit)
       }
-
-      def fromSymbol: Boolean = upperBound(t.symbol).exists(isSemanticUnit)
-
-      fromSyntax || fromSymbol
     }
 
     doc.tree.collect({
