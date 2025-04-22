@@ -30,32 +30,40 @@ class Kyo extends SemanticRule("Kyo") {
     val PendingType: Symbol = Symbol("kyo/kernel/Pending$package.`<`#")
     val UnitType: Symbol = Symbol("scala/Unit#")
 
+    def upperBound(symbol: Symbol): Option[SemanticType] = {
+      symbol.info match {
+        case Some(symbolInformation) =>
+          symbolInformation.signature match {
+            //case ValueSignature(tpe) => Some(tpe)
+            case TypeSignature(_, _, upperBound) => Some(upperBound)
+            case _ => None
+          }
+        case _ => None
+      }
+    }
+
     def isSemanticUnit(semanticType: SemanticType): Boolean = {
       semanticType match {
-        case TypeRef(NoType, PendingType, List(a, _)) =>
-          isSemanticUnit(a)
+        //Unit
         case TypeRef(NoType, UnitType, Nil) => true
+        //a < _
+        case TypeRef(NoType, PendingType, List(a, _)) => isSemanticUnit(a)
+        //alias
+        case TypeRef(NoType, symbol, Nil) => upperBound(symbol).exists(isSemanticUnit)
         case _ => false
       }
     }
 
     def isUnitType(t: Type): Boolean = {
-      //check subtype ?
-      val fromSyntax: Boolean = t match {
+      def fromSyntax: Boolean = t match {
         case Type.Name("Unit") => true
-        case Type.ApplyInfix(Type.Name("Unit"), Type.Name("<"), _) => true
+        case Type.ApplyInfix(t, Type.Name("<"), _) => isUnitType(t)
         case _ => false
       }
-      //println("" + t + ":"+ t.structure + ":" +   t.symbol.info)
-      t.symbol.info match {
-        case _ if fromSyntax => true
-        case Some(value) =>
-          value.signature match {
-            case TypeSignature(Nil, _, up) => isSemanticUnit(up)
-            case _ => false
-          }
-        case None => false
-      }
+
+      def fromSymbol: Boolean = upperBound(t.symbol).exists(isSemanticUnit)
+
+      fromSyntax || fromSymbol
     }
 
     doc.tree.collect({

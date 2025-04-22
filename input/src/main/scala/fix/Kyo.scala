@@ -46,5 +46,14 @@ object Kyo {
     Console.printLine("warn").now
   )
 
+  type U = Unit
+  type B = U < Any
+  val b: B = defer {
+    Console.printLine("warn").now
+  }
+
+  val c: U < Any = defer {
+    Console.printLine("warn").now
+  }
 
 }
